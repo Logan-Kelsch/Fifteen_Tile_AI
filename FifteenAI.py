@@ -66,6 +66,13 @@ def setBoard():
     #return solvable board
     return board
 
+def setBoardCustom():
+  board = [[1, 2, 3, 4],\
+           [5, 6, 7, 8],\
+           [9, 10, 11, 12],\
+           [0, 13, 14, 15]]
+  return board
+
 #game class
 class game15(QWidget):
   def __init__(self):
@@ -79,7 +86,13 @@ class game15(QWidget):
     # Create a QTimer to repeatedly call the simulate_click method
     self.timer = QTimer(self)
     self.timer.timeout.connect(self.algo_click)
-    self.timer.start(200) #milliseconds
+    self.timer.start(100) #milliseconds
+
+ #               oldest            newest
+  last_moves = []
+  moves_tracked = 4
+  for i in range(moves_tracked):
+    last_moves.append([-1,-1])
 
   def algo_click(self):
     #do nothing if game is complete
@@ -89,9 +102,12 @@ class game15(QWidget):
     
     crntScore = getBoardScore(self.__board)
     
-    row, col = getBestMove_depth4(self.__board)
+    row, col = getBestMove(self.__board, self.last_moves)
+    self.last_moves.pop(0)
+    self.last_moves.append([(row/100-1),(col/100-1)])
     QTest.mouseClick(self, Qt.LeftButton, pos=QPoint(row, col))
 
+    '''
     emptyRow, emptyCol = getEmptySquare(self.__board)
         
     if(isValidMove(CELL_COUNT, row, col, emptyRow, emptyCol)):
@@ -101,6 +117,7 @@ class game15(QWidget):
     self.__complete = isCompleteBoard(self.__board)
     #finish mouseclick function, update board
     self.update()
+    '''
 
 
   #paint board

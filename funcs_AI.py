@@ -13,6 +13,7 @@ FUNCTIONS:
 '''
 
 import numpy as np
+import copy
 
 #will score current board to tell how close it is
 #calculate manhattan distance
@@ -20,24 +21,34 @@ def getBoardScore(board):
     score = 0
     boardVal = 0
     rLoc, cLoc = 0, 0
+    manOffset = 0
     for r in range(4):
        for c in range(4):
           boardVal = board[r][c]
-          rLoc = 3 - (boardVal//4)
-          cLoc = 3 - (boardVal%4)
-          score += abs(rLoc-r) + abs(cLoc-c)
+          if(boardVal!=0):
+            rLoc = ((boardVal-1)//4)
+            cLoc = ((boardVal-1)%4)
+            manOffset = np.square(rLoc-r) + abs(cLoc-c)
+          else:
+            rLoc = 3
+            cLoc = 3
+            manOffset = abs(3-r) + abs(3-c)
+          score += manOffset
+    score+=inversionCount(board)
     return score
-'''
-#will score current board to tell how close it is
-#calculate manhattan distance
-def getBoardScore(board):
-    score = 0
+
+def inversionCount(board):
+    invs = 0
     flatBoard = []
     for i in range(0,16):
-       flatBoard.append(board[i])
-          
-    return score
-'''
+        flatBoard.append(board[i//4][i%4])
+    for i in range(0,16):
+        crntVal = flatBoard[i]
+        for j in range(i+1,16):
+           tmpVal = flatBoard[j]
+           if(crntVal>tmpVal and crntVal!=0):
+              invs+=1
+    return invs
 #will be used with decision fringe to return board
 #returning a board so it will be scored amongst other moves
 def getThinkingBoard(board, r, c):
@@ -48,9 +59,8 @@ def getThinkingBoard(board, r, c):
 #will return a set of moves that can be made from current board
 #these moves will be individually thrown into getthinkingboard,getboardscore
 #to gather which move is best
-def getMoveFringe(board):
+def getMoveFringe(board, last_moves):
     e_r, e_c = getEmptySquare(board)
-
     possibleMoves = [[0,0], [0,1], [0,2], [0,3],\
                      [1,0], [1,1], [1,2], [1,3],\
                      [2,0], [2,1], [2,2], [2,3],\
@@ -58,17 +68,25 @@ def getMoveFringe(board):
     fringe = []
     for move in possibleMoves:
        if(isValidMove(4, move[0], move[1], e_r, e_c)):
-          fringe.append(move)
+          if(isRecentMove(move,last_moves) is False):
+            fringe.append(move)
        
     return fringe
 
+def isRecentMove(move, last_moves):
+  for lmoves in last_moves:
+      if(lmoves[0]==move[0] and lmoves[1]==move[1]):
+          return True
+  return False
+
 #this will take decisionfringe, make thinkingboard of each decision,
 #get score for each thinkingboard/decision, and then return the best decision
-def getBestMove(board):
-    moveFringe = getMoveFringe(board)
+def getBestMove(board, last_moves):
+    moveFringe = getMoveFringe(board, last_moves)
     fringeScores = []
     for move in moveFringe:
-       fringeScores.append(getBoardScore(getThinkingBoard(board,move[0],move[1])))
+       tmpBoard = getThinkingBoard(board,move[0],move[1])
+       fringeScores.append(getBoardScore(tmpBoard))
     bestMoveLoc = np.argmin(fringeScores)
     b_r = moveFringe[bestMoveLoc][0]
     b_c = moveFringe[bestMoveLoc][1]
@@ -78,49 +96,8 @@ def getBestMove(board):
 
     return b_r, b_c
 
-def getBestMove_depth4(board):
-    mFringe_d1 = getMoveFringe(board)
-    fringeScore_1 = []
-    
-    
-    
-    
-    
-    
-    bestMovesFrom_2 = []
-    for move in mFringe_d1:
-        tmpBoard_for2 = getThinkingBoard(board, move[0], move[1])
-        mFringe_d2 = getMoveFringe(tmpBoard_for2)
-        fringeScore_2 = []
-        bestMovesFrom_3 = []
-        for move_2 in mFringe_d2:
-            tmpBoard_for3 = getThinkingBoard(tmpBoard_for2, move_2[0], move_2[1])
-            mFringe_d3 = getMoveFringe(tmpBoard_for3)
-            fringeScore_3 = []
-            bestMovesFrom_4 = []
-            for move_3 in mFringe_d3:
-                tmpBoard_for4 = getThinkingBoard(tmpBoard_for3, move_3[0], move_3[1])
-                mFringe_d4 = getMoveFringe(tmpBoard_for3)
-                fringeScore_4 = []
-
-                for move_4 in mFringe_d4:
-                   fringeScore_4.append(getBoardScore(getThinkingBoard(tmpBoard_for4, move_4[0], move_4[1])))
-                #fringeScore_3.append(getBoardScore(getThinkingBoard(tmpBoard_for3, move_3[0], move_3[1])))
-                bestMovesFrom_4.append(np.min(fringeScore_4))#one for each mFringe_d3
-            #fringeScore_2.append(getBoardScore(getThinkingBoard(tmpBoard_for2, move_2[0], move_2[1])))
-            bestMovesFrom_3.append(np.min(bestMovesFrom_4))#one for each mFringe_d2
-        #fringeScore_1.append(getBoardScore(getThinkingBoard(board, move[0], move[1])))
-        bestMovesFrom_2.append(np.min(bestMovesFrom_3))#as many as mFringe_d1
-    bestMoveLoc = np.argmin(bestMovesFrom_2)
-    b_r = mFringe_d1[bestMoveLoc][0]
-    b_c = mFringe_d1[bestMoveLoc][1]
-
-    b_r = (b_r+1)*100
-    b_c = (b_c+1)*100
-
-    return b_r, b_c
-
 def makeMove(board, row, col, e_r, e_c):
+    newboard = copy.deepcopy(board)
     if(row==e_r):
         #direction variable for value shift optimization
         #0 dir value does not apply unless empty square is clicked
@@ -133,8 +110,8 @@ def makeMove(board, row, col, e_r, e_c):
         #for cells in adjacent row, between clicked cell and empty cell
         for c in range(e_c,col,dir):
           #PULL cell values towards empty spot down the line, and assign zero to clicked square accordingly
-          board[row][c] = board[row][c+dir]
-        board[row][col] = 0
+          newboard[row][c] = newboard[row][c+dir]
+        newboard[row][col] = 0
     #adjacency of column, meaning cells will shift up or down
     #same code as just above flipped, refer to comments above for explanation
     if(col==e_c):
@@ -144,9 +121,9 @@ def makeMove(board, row, col, e_r, e_c):
         else:
           dir = 1
         for r in range(e_r,row,dir):
-          board[r][col] = board[r+dir][col]
-        board[row][col] = 0
-    return board
+          newboard[r][col] = newboard[r+dir][col]
+        newboard[row][col] = 0
+    return newboard
 
 def getEmptySquare(board):
     for r in range(len(board)):
