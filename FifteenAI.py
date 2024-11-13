@@ -13,6 +13,14 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QApplication
 import random
 
+#IMPORTS FOR AI
+#personal function file
+from funcs_AI import *
+#for simulating a mouse click
+from PyQt5.QtTest import QTest
+from PyQt5.QtCore import QTimer, QPoint
+import numpy as np
+
 #4x4 GRID, window size 600x600, grid square sizes of 100x100
 CELL_COUNT = 4
 CELL_SIZE = 100
@@ -67,8 +75,34 @@ class game15(QWidget):
     self.__moveNum = 0 #tally of move numbers
     self.__complete = False #bool for game completion
     self.__board = setBoard() #board values (2D array)
-    self.show()
-  
+    #self.show()
+    # Create a QTimer to repeatedly call the simulate_click method
+    self.timer = QTimer(self)
+    self.timer.timeout.connect(self.algo_click)
+    self.timer.start(200) #milliseconds
+
+  def algo_click(self):
+    #do nothing if game is complete
+    if self.__complete is True:
+      self.timer.stop()
+      return
+    
+    crntScore = getBoardScore(self.__board)
+    
+    row, col = getBestMove_depth4(self.__board)
+    QTest.mouseClick(self, Qt.LeftButton, pos=QPoint(row, col))
+
+    emptyRow, emptyCol = getEmptySquare(self.__board)
+        
+    if(isValidMove(CELL_COUNT, row, col, emptyRow, emptyCol)):
+      self.__moveNum+=1
+      self.__board = makeMove(self.__board, row, col, emptyRow, emptyCol)
+
+    self.__complete = isCompleteBoard(self.__board)
+    #finish mouseclick function, update board
+    self.update()
+
+
   #paint board
   def paintEvent(self, event):
     qp = QPainter()
@@ -93,6 +127,7 @@ class game15(QWidget):
     #move counter below board
     qp.drawText(320,550,str(self.__moveNum))
     qp.drawText(100,550,'MOVES:')
+    qp.drawText(170,75,str(getBoardScore(self.__board)))
     
     qp.setPen(blackPen)
     #for each square in board, print lines, numbers, and fill colors
@@ -181,4 +216,5 @@ class game15(QWidget):
 if __name__ == '__main__':
   app = QApplication(sys.argv)
   ex = game15()
+  ex.show()
   sys.exit(app.exec_())
