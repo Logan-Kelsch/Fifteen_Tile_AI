@@ -34,7 +34,7 @@ def getBoardScore(board):
             cLoc = 3
             manOffset = abs(3-r) + abs(3-c)
           score += manOffset
-    score+=inversionCount(board)
+    #score+=inversionCount(board)
     return score
 
 def inversionCount(board):
@@ -91,9 +91,44 @@ def getBestMove(board, last_moves):
     b_r = moveFringe[bestMoveLoc][0]
     b_c = moveFringe[bestMoveLoc][1]
 
-    b_r = (b_r+1)*100
-    b_c = (b_c+1)*100
+    #b_r = (b_r+1)*100
+    #b_c = (b_c+1)*100
 
+    print(f'move to make: {b_r} {b_c}')
+    return b_r, b_c
+
+def getBestMove_d2(board, last_moves):
+    moveFringe = getMoveFringe(board, last_moves)
+    fringeScores = []
+    #we have a fringe of moves
+    #now instead of appending fringe scores and grabbing argmin
+    #we want to make a move fringe specifically for each
+    #  move in fringe
+    #for each d2fringe we will have a new last_moves and board
+    #we will then append and NOTargmin best scores for each fringe
+    #instead we will have the regular min represent each fringe
+    # so following each .min will not be var assignment
+    #    it will be appending to lists of best scores alike
+    #      fringescores in getBestMove. and then we will
+    #        grab argmin to be able to pick out
+    #            move from original moveFringe
+    for move in moveFringe:
+        tmpBoard = getThinkingBoard(board,move[0],move[1])
+        last_moves_lookahead = copy.deepcopy(last_moves)
+        last_moves_lookahead.pop(0)
+        last_moves_lookahead.append(move)
+        nextMove0, nextMove1 = getBestMove(tmpBoard, last_moves_lookahead)
+        tmpBoard2 = getThinkingBoard(tmpBoard, nextMove0, nextMove1)
+        
+        fringeScores.append(getBoardScore(tmpBoard2))
+    bestMoveLoc = np.argmin(fringeScores)
+    b_r = moveFringe[bestMoveLoc][0]
+    b_c = moveFringe[bestMoveLoc][1]
+
+    #b_r = (b_r+1)*100
+    #b_c = (b_c+1)*100
+
+    print(f'move to make: {b_r} {b_c}')
     return b_r, b_c
 
 def makeMove(board, row, col, e_r, e_c):

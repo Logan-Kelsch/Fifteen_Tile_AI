@@ -86,11 +86,11 @@ class game15(QWidget):
     # Create a QTimer to repeatedly call the simulate_click method
     self.timer = QTimer(self)
     self.timer.timeout.connect(self.algo_click)
-    self.timer.start(100) #milliseconds
+    self.timer.start(20) #milliseconds
 
  #               oldest            newest
   last_moves = []
-  moves_tracked = 4
+  moves_tracked = 3
   for i in range(moves_tracked):
     last_moves.append([-1,-1])
 
@@ -100,25 +100,16 @@ class game15(QWidget):
       self.timer.stop()
       return
     
-    crntScore = getBoardScore(self.__board)
     
-    row, col = getBestMove(self.__board, self.last_moves)
+    row, col = getBestMove_d2(self.__board, self.last_moves)
     self.last_moves.pop(0)
-    self.last_moves.append([(row/100-1),(col/100-1)])
-    QTest.mouseClick(self, Qt.LeftButton, pos=QPoint(row, col))
+    self.last_moves.append([row,col])
 
-    '''
-    emptyRow, emptyCol = getEmptySquare(self.__board)
-        
-    if(isValidMove(CELL_COUNT, row, col, emptyRow, emptyCol)):
-      self.__moveNum+=1
-      self.__board = makeMove(self.__board, row, col, emptyRow, emptyCol)
-
-    self.__complete = isCompleteBoard(self.__board)
-    #finish mouseclick function, update board
-    self.update()
-    '''
-
+    x = (col+1)*100
+    y = (row+1)*100
+    print(f'move to make: [{row} {col}]')
+    print(f'loc to click: [{x} {y}]')
+    QTest.mouseClick(self, Qt.LeftButton, pos=QPoint(x, y))
 
   #paint board
   def paintEvent(self, event):
