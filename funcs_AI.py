@@ -15,9 +15,82 @@ FUNCTIONS:
 import numpy as np
 import copy
 
+def getBoardScore(board):
+   score = score_topHalfSolver(board)
+   return score
+
+def firstRowSolved(board):
+	if(solved_chunk1(board) and solved_chunk2(board)):
+			return True
+	else:
+			return False
+
+def secondRowSolved(board):
+	if(solved_chunk3(board) and solved_chunk4(board)):
+			return True
+	else:
+			return False
+
+def topHalfSolved(board):
+	if(firstRowSolved(board) and secondRowSolved(board)):
+		return True
+	else:
+		return False
+    
+def solved_chunk1(board):
+	if(board[0][0]==1 and board[0][1]==2): 
+		return True
+	else:
+		return False
+
+def solved_chunk2(board):
+	if(board[0][2]==3 and board[0][3]==4):
+		return True
+	else:
+		return False
+
+def solved_chunk3(board):
+	if(board[1][0]==5 and board[1][1]==6):
+		return True
+	else:
+		return False
+
+def solved_chunk4(board):
+	if(board[1][2]==7 and board[1][3]==8):
+		return True
+	else:
+		return False
+   
+def score_topHalfSolver(board):
+	score = 0
+	boardVal = 0
+	rLoc, cLoc = 0, 0
+	match topHalfSolved(board):
+		case False:
+			match firstRowSolved(board):
+				case False:
+                    #first row manhattan isolate
+					for r in range(4):
+						for c in range(4):
+							boardVal = board[r][c]
+							if(boardVal<3 and boardVal!=0):
+								rLoc = ((boardVal-1)//4)
+								cLoc = ((boardVal-1)%4)
+								score += ( abs(rLoc-r) + abs(cLoc-c) )*np.square(5-boardVal)
+							#if(boardVal>2 and boardVal<5):
+                            #    rLoc = (())
+
+				case True:#if land here, second row unsolved by definition
+                    #second row mahattan isolate
+					return score_Manhattan(board)#temporary manhattan here
+			
+		case True:#use manhattan for second half
+			return score_Manhattan(board)
+	return score
+
 #will score current board to tell how close it is
 #calculate manhattan distance
-def getBoardScore(board):
+def score_Manhattan(board):
     score = 0
     boardVal = 0
     rLoc, cLoc = 0, 0
@@ -28,16 +101,15 @@ def getBoardScore(board):
           if(boardVal!=0):
             rLoc = ((boardVal-1)//4)
             cLoc = ((boardVal-1)%4)
-            manOffset = np.square(rLoc-r) + abs(cLoc-c)
+            manOffset = abs(rLoc-r) + abs(cLoc-c)
           else:
             rLoc = 3
             cLoc = 3
             manOffset = abs(3-r) + abs(3-c)
           score += manOffset
-    #score+=inversionCount(board)
     return score
 
-def inversionCount(board):
+def score_Inversions(board):
     invs = 0
     flatBoard = []
     for i in range(0,16):
@@ -98,8 +170,6 @@ def getBestMove(board, last_moves):
     return b_r, b_c
 
 def getBestMove_d2(board, last_moves):
-    moveFringe = getMoveFringe(board, last_moves)
-    fringeScores = []
     #we have a fringe of moves
     #now instead of appending fringe scores and grabbing argmin
     #we want to make a move fringe specifically for each
@@ -112,15 +182,19 @@ def getBestMove_d2(board, last_moves):
     #      fringescores in getBestMove. and then we will
     #        grab argmin to be able to pick out
     #            move from original moveFringe
+    moveFringe = getMoveFringe(board, last_moves)
+    fringeScores = []
     for move in moveFringe:
         tmpBoard = getThinkingBoard(board,move[0],move[1])
         last_moves_lookahead = copy.deepcopy(last_moves)
         last_moves_lookahead.pop(0)
         last_moves_lookahead.append(move)
-        nextMove0, nextMove1 = getBestMove(tmpBoard, last_moves_lookahead)
-        tmpBoard2 = getThinkingBoard(tmpBoard, nextMove0, nextMove1)
-        
-        fringeScores.append(getBoardScore(tmpBoard2))
+        moveFringe_2 = getMoveFringe(tmpBoard,last_moves_lookahead)
+        fringeScores_2 = []
+        for move2 in moveFringe_2:
+           tmpBoard2 = getThinkingBoard(board,move2[0],move2[1])
+           fringeScores_2.append(getBoardScore(tmpBoard2))
+        fringeScores.append(np.min(fringeScores_2))
     bestMoveLoc = np.argmin(fringeScores)
     b_r = moveFringe[bestMoveLoc][0]
     b_c = moveFringe[bestMoveLoc][1]

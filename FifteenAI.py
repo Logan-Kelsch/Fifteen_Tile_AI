@@ -90,7 +90,7 @@ class game15(QWidget):
 
  #               oldest            newest
   last_moves = []
-  moves_tracked = 3
+  moves_tracked = 6
   for i in range(moves_tracked):
     last_moves.append([-1,-1])
 
@@ -101,7 +101,7 @@ class game15(QWidget):
       return
     
     
-    row, col = getBestMove_d2(self.__board, self.last_moves)
+    row, col = getBestMove(self.__board, self.last_moves)
     self.last_moves.pop(0)
     self.last_moves.append([row,col])
 
