@@ -69,8 +69,8 @@ def setBoard():
 def setBoardCustom():
   board = [[1, 2, 3, 4],\
            [5, 6, 7, 8],\
-           [9, 10, 11, 12],\
-           [0, 13, 14, 15]]
+           [12, 10, 11, 9],\
+           [14, 0, 13, 15]]
   return board
 
 #game class
@@ -81,18 +81,21 @@ class game15(QWidget):
     self.setGeometry(400, 400, W_WIDTH,W_HEIGHT)
     self.__moveNum = 0 #tally of move numbers
     self.__complete = False #bool for game completion
+    self.__complete_topHalf = False
     self.__board = setBoard() #board values (2D array)
     #self.show()
     # Create a QTimer to repeatedly call the simulate_click method
     self.timer = QTimer(self)
     self.timer.timeout.connect(self.algo_click)
-    self.timer.start(20) #milliseconds
+    self.timer.start(100) #milliseconds
 
  #               oldest            newest
   last_moves = []
-  moves_tracked = 6
+  moves_tracked = 5
   for i in range(moves_tracked):
     last_moves.append([-1,-1])
+
+  
 
   def algo_click(self):
     #do nothing if game is complete
@@ -100,10 +103,18 @@ class game15(QWidget):
       self.timer.stop()
       return
     
+
     
-    row, col = getBestMove(self.__board, self.last_moves)
+    row, col = getBestMove_d2(self.__board, self.last_moves)
     self.last_moves.pop(0)
     self.last_moves.append([row,col])
+    '''
+    if(self.__complete_topHalf==False and topHalfSolved(self.__board)\
+       and solved_chunk5(self.__board)):
+      for i in range(3,self.moves_tracked):
+        self.last_moves.pop(0)
+      self.__complete_topHalf= True
+    '''
 
     x = (col+1)*100
     y = (row+1)*100
@@ -135,7 +146,6 @@ class game15(QWidget):
     #move counter below board
     qp.drawText(320,550,str(self.__moveNum))
     qp.drawText(100,550,'MOVES:')
-    qp.drawText(170,75,str(getBoardScore(self.__board)))
     
     qp.setPen(blackPen)
     #for each square in board, print lines, numbers, and fill colors

@@ -20,94 +20,142 @@ def getBoardScore(board):
    return score
 
 def firstRowSolved(board):
-	if(solved_chunk1(board) and solved_chunk2(board)):
-			return True
-	else:
-			return False
+    if(solved_chunk1(board) and solved_chunk2(board)):
+            return True
+    else:
+            return False
 
 def secondRowSolved(board):
-	if(solved_chunk3(board) and solved_chunk4(board)):
-			return True
-	else:
-			return False
+    if(solved_chunk3(board) and solved_chunk4(board)):
+            return True
+    else:
+            return False
 
 def topHalfSolved(board):
-	if(firstRowSolved(board) and secondRowSolved(board)):
-		return True
-	else:
-		return False
+    if(firstRowSolved(board) and secondRowSolved(board)):
+        return True
+    else:
+        return False
     
 def solved_chunk1(board):
-	if(board[0][0]==1 and board[0][1]==2): 
-		return True
-	else:
-		return False
+    if(board[0][0]==1 and board[0][1]==2): 
+        return True
+    else:
+        return False
 
 def solved_chunk2(board):
-	if(board[0][2]==3 and board[0][3]==4):
-		return True
-	else:
-		return False
+    if(board[0][2]==3 and board[0][3]==4):
+        return True
+    else:
+        return False
 
 def solved_chunk3(board):
-	if(board[1][0]==5 and board[1][1]==6):
-		return True
-	else:
-		return False
+    if(board[1][0]==5 and board[1][1]==6):
+        return True
+    else:
+        return False
 
 def solved_chunk4(board):
-	if(board[1][2]==7 and board[1][3]==8):
-		return True
-	else:
-		return False
+    if(board[1][2]==7 and board[1][3]==8):
+        return True
+    else:
+        return False
+    
+def solved_chunk5(board):
+    if(board[2][0]==9 and board[3][0]==13):
+        return True
+    else:
+        return False
+
+def score_punishCases(board):
+    score = 0
+    if(not solved_chunk1(board)):
+        if(board[0][0]!=1 and board[0][1]==2):
+            score+=40
+    elif(not solved_chunk2(board)):
+        if(board[0][2]==3 and board[0][3]!=4 and board[0][3]!=0):
+            score+=40
+        if(board[0][2]!=3 and board[0][3]==4 and board[0][2]!=0):
+            score+=40
+        if(board[1][2]==3 and board[1][3]==4):
+            score+=40
+        if(board[2][2]==3 and board[2][3]==4):
+            score+=40
+    elif(not solved_chunk3(board)):
+        if(board[1][0]!=5 and board[1][1]==6):
+            score+=40
+    elif(not solved_chunk4(board)):
+        if(board[1][2]==7 and board[1][3]!=8 and board[1][3]!=0):
+            score+=40
+        if(board[1][2]!=7 and board[1][3]==8 and board[1][2]!=0):
+            score+=40
+        if(board[1][2]!=0 and board[1][3]==8 and board[2][2]==7):
+            score+=40
+        if(board[2][2]==7 and board[2][3]==8):
+            score+=40
+        if(board[3][2]==7 and board[3][3]==8):
+            score+=40
+    return score
    
 def score_topHalfSolver(board):
-	score = 0
-	boardVal = 0
-	rLoc, cLoc = 0, 0
-	match topHalfSolved(board):
-		case False:
-			match firstRowSolved(board):
-				case False:
-                    #first row manhattan isolate
-					for r in range(4):
-						for c in range(4):
-							boardVal = board[r][c]
-							if(boardVal<3 and boardVal!=0):
-								rLoc = ((boardVal-1)//4)
-								cLoc = ((boardVal-1)%4)
-								score += ( abs(rLoc-r) + abs(cLoc-c) )*np.square(5-boardVal)
-							#if(boardVal>2 and boardVal<5):
-                            #    rLoc = (())
-
-				case True:#if land here, second row unsolved by definition
-                    #second row mahattan isolate
-					return score_Manhattan(board)#temporary manhattan here
-			
-		case True:#use manhattan for second half
-			return score_Manhattan(board)
-	return score
+    score = 0
+    boardVal = 0
+    rLoc, cLoc = 0, 0
+    if(not topHalfSolved(board)):
+        if(not firstRowSolved(board)):
+            if(not solved_chunk1(board)):
+                for r in range(4):
+                    for c in range(4):
+                        if(board[r][c]<3 and board[r][c]!=0):
+                            score += calc_indivManhattan(board[r][c], r, c)
+                score += 100
+            else:#chunk 2 not solved
+                for r in range(4):
+                    for c in range(4):
+                        if(board[r][c]<5 and board[r][c]>2):
+                            score += calc_indivManhattan(board[r][c], r, c)
+                score += 80
+        else:#second row is not solved
+            if(not solved_chunk3(board)):
+                for r in range(4):
+                    for c in range(4):
+                        if(board[r][c]<7 and board[r][c]>4):
+                            score += calc_indivManhattan(board[r][c], r, c)
+                score += 60
+            else:#chunk 4 not solved
+                for r in range(4):
+                    for c in range(4):
+                        if(board[r][c]<9 and board[r][c]>6):
+                            score += calc_indivManhattan(board[r][c], r, c)
+                score += 40
+    else:#second half not solved
+        if(not solved_chunk5(board)):
+            for r in range(4):
+                for c in range(4):
+                    if(board[r][c]==9 or board[r][c]==13):
+                        score += calc_indivManhattan(board[r][c], r, c)
+            score+=20
+        
+        return score_Manhattan(board)
+    score += score_punishCases(board)
+    return score
 
 #will score current board to tell how close it is
 #calculate manhattan distance
 def score_Manhattan(board):
     score = 0
-    boardVal = 0
-    rLoc, cLoc = 0, 0
-    manOffset = 0
     for r in range(4):
        for c in range(4):
-          boardVal = board[r][c]
-          if(boardVal!=0):
-            rLoc = ((boardVal-1)//4)
-            cLoc = ((boardVal-1)%4)
-            manOffset = abs(rLoc-r) + abs(cLoc-c)
+          if(board[r][c]!=0):
+            score += calc_indivManhattan(board[r][c], r, c)
           else:
-            rLoc = 3
-            cLoc = 3
-            manOffset = abs(3-r) + abs(3-c)
-          score += manOffset
+            score += calc_indivManhattan(board[r][c], r, c)
     return score
+
+def calc_indivManhattan(boardVal, r, c):
+    rLoc = ((boardVal-1)//4)
+    cLoc = ((boardVal-1)%4)
+    return (abs(rLoc-r) + abs(cLoc-c))
 
 def score_Inversions(board):
     invs = 0
@@ -191,9 +239,29 @@ def getBestMove_d2(board, last_moves):
         last_moves_lookahead.append(move)
         moveFringe_2 = getMoveFringe(tmpBoard,last_moves_lookahead)
         fringeScores_2 = []
+        #add this move to the list to consider good shorter moves too
+        fringeScores_2.append(getBoardScore(tmpBoard))
         for move2 in moveFringe_2:
-           tmpBoard2 = getThinkingBoard(board,move2[0],move2[1])
-           fringeScores_2.append(getBoardScore(tmpBoard2))
+            tmpBoard2 = getThinkingBoard(tmpBoard,move2[0],move2[1])
+            last_moves_lookahead_2 = copy.deepcopy(last_moves_lookahead)
+            last_moves_lookahead_2.pop(0)
+            last_moves_lookahead_2.append(move2)
+            moveFringe_3 = getMoveFringe(tmpBoard2,last_moves_lookahead_2)
+            fringeScores_3 = []
+            fringeScores_3.append(getBoardScore(tmpBoard2))
+            for move3 in moveFringe_3:
+                tmpBoard3 = getThinkingBoard(tmpBoard2, move3[0], move3[1])
+                last_moves_lookahead_3 = copy.deepcopy(last_moves_lookahead_2)
+                last_moves_lookahead_3.pop(0)
+                last_moves_lookahead_3.append(move3)
+                moveFringe_4 = getMoveFringe(tmpBoard3,last_moves_lookahead_3)
+                fringeScores_4 = []
+                fringeScores_4.append(getBoardScore(tmpBoard3))
+                for move4 in moveFringe_4:
+                    tmpBoard4 = getThinkingBoard(tmpBoard3, move4[0], move4[1])
+                    fringeScores_4.append(getBoardScore(tmpBoard4))
+                fringeScores_3.append(np.min(fringeScores_4))
+            fringeScores_2.append(np.min(fringeScores_3))
         fringeScores.append(np.min(fringeScores_2))
     bestMoveLoc = np.argmin(fringeScores)
     b_r = moveFringe[bestMoveLoc][0]
