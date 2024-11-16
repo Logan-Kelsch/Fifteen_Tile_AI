@@ -1,3 +1,11 @@
+'''
+    ATTENTION:
+        THIS FILE IS OFFICIALLY DEPRICATED
+        ALL FUNCTIONS HERE WERE MOVED INTO 
+        THE FIFTEENAI.PY FILE FOR EASE OF
+        ASSIGNMENT UPLOADING.
+'''
+
 #this is the function file for all new functions to the program
 #that are implemented for this assignment
 
